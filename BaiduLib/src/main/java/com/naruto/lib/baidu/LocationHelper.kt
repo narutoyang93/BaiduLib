@@ -11,7 +11,7 @@ import com.baidu.location.LocationClient
 import com.baidu.location.LocationClientOption
 import com.naruto.lib.common.Global
 import com.naruto.lib.common.base.BaseActivity
-import com.naruto.weather.utils.LogUtils
+import com.naruto.lib.common.utils.LogUtils
 import java.util.*
 import kotlin.concurrent.schedule
 

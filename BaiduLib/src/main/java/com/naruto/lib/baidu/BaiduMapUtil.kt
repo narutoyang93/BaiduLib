@@ -8,8 +8,8 @@ import com.baidu.mapapi.search.geocode.GeoCodeResult
 import com.baidu.mapapi.search.geocode.OnGetGeoCoderResultListener
 import com.baidu.mapapi.search.geocode.ReverseGeoCodeResult
 import com.baidu.mapapi.utils.OpenClientUtil
-import com.naruto.weather.utils.DialogFactory
-import com.naruto.weather.utils.DialogFactory.DialogData
+import com.naruto.lib.common.utils.DialogFactory
+import com.naruto.lib.common.utils.DialogFactory.DialogData
 
 /**
  * @Description

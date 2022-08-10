@@ -65,7 +65,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
     //公共库
-    implementation 'com.github.narutoyang93:CommonLib:1.0.0'
+    implementation 'com.github.narutoyang93:CommonLib:1.0.1'
     //百度sdk
     api 'com.baidu.lbsyun:BaiduMapSDK_Location_All:9.3.0'
     api 'com.baidu.lbsyun:BaiduMapSDK_Search:7.5.2'

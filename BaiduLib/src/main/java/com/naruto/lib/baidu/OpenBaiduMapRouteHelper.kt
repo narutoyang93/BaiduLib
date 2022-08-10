@@ -13,8 +13,8 @@ import com.baidu.mapapi.utils.route.RouteParaOption
 import com.naruto.lib.common.MultiTaskFinishListener
 import com.naruto.lib.common.base.BaseActivity
 import com.naruto.lib.common.utils.LifecycleUtil
-import com.naruto.weather.utils.DialogFactory
-import com.naruto.weather.utils.LogUtils
+import com.naruto.lib.common.utils.DialogFactory
+import com.naruto.lib.common.utils.LogUtils
 
 /**
  * @Description
