@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="address_error_navigate">目的地信息无效，无法开启导航</string>
+</resources>
