@@ -7,7 +7,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import com.baidu.location.LocationClient
 import com.baidu.mapapi.SDKInitializer
-import com.naruto.lib.common.Global.commonLibInit
+import com.naruto.lib.common.commonLibInit
 import com.naruto.lib.common.utils.LogUtils
 
 /**
