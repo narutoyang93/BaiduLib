@@ -25,7 +25,8 @@ import com.naruto.lib.common.utils.LogUtils
 class OpenBaiduMapRouteHelper(private val activity: BaseActivity) {
     private val locationHelper = LocationHelper(activity)// TODO: 申请权限
     private val locationCallback = object : LocationHelper.LocationCallback {
-        override val requestPermissionReason: String="导航功能需要定位权限"
+        override val requestPermissionReason: String = "导航功能需要定位权限"
+        override val needGps: Boolean = true
 
         override fun onFinish(bdLocation: BDLocation?) {
             if (bdLocation == null) {
