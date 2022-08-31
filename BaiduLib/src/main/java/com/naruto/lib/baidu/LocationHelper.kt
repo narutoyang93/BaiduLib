@@ -6,7 +6,6 @@ import android.content.Intent
 import android.location.LocationManager
 import android.provider.Settings
 import android.util.Pair
-import android.widget.Toast
 import com.baidu.location.BDAbstractLocationListener
 import com.baidu.location.BDLocation
 import com.baidu.location.LocationClient
@@ -65,7 +64,7 @@ class LocationHelper(
     private val option = LocationClientOption()
     private lateinit var locationCallback: LocationCallback
     private var timeoutTimer: Timer? = null
-    private var timeOut= DEF_TIMEOUT
+    private var timeOut = DEF_TIMEOUT
     private val permissions =
         if (needFineLocation) LOCATION_PERMISSIONS else arrayOf(LOCATION_PERMISSIONS[0])
 
@@ -114,17 +113,17 @@ class LocationHelper(
         if (!isGpsOpen()) {
             if (callback.needGps) { //GPS没有打开，提示用户打开GPS重新定位
                 Global.doByActivity { activity ->
-                    DialogFactory.makeGoSettingDialog(activity,
-                        "定位服务未开启",
+                    DialogFactory.makeGoSettingDialog(activity, "定位服务未开启",
                         Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS),
-                        { callback.onFinish(null) } //用户不前往设置，即用户不想定位
+                        { Global.finishTaskActivity(); callback.onFinish(null) } //用户不前往设置，即用户不想定位
                     ) {
+                        Global.finishTaskActivity()
                         if (isGpsOpen()) checkPermissionAndLocating(callback)
                         else callback.onFinish(null)//用户依旧没开启GPS，即用户不想定位
                     }.show()
                 }
             } else {
-                LogUtils.e("--->GPS is not opened.")
+                LogUtils.w("--->GPS is not opened.")
                 callback.onFinish(null)
             }
             return
@@ -174,8 +173,8 @@ class LocationHelper(
                         timeoutTimer = null
                         stopLocating()
                         MainScope().launch {
-                            Toast.makeText(context, "定位超时", Toast.LENGTH_SHORT).show()
-                            LogUtils.e("--->定位超时")
+                            Global.toast("定位超时")
+                            LogUtils.w("--->定位超时")
                             locationCallback.onFinish(null)
                         }
                     }
@@ -223,7 +222,7 @@ class LocationHelper(
      */
     interface LocationCallback {
         val requestPermissionReason: String?//申请定位权限的理由，若为null，则不申请权限，有权限就定位，无权限直接返回定位失败
-        val needGps: Boolean//是否需要开启GPS，若为false，则不要求用户开启GPS，已开启就定位，未开启直接返回定位失败
+        var needGps: Boolean//是否需要开启GPS，若为false，则不要求用户开启GPS，已开启就定位，未开启直接返回定位失败
         fun onFinish(bdLocation: BDLocation?)
         fun onStart() {}
 
