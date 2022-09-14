@@ -60,19 +60,18 @@ class LocationHelper(
     }
 
     private val client = LocationClient(context)
-        .apply { if (needForegroundService) enableLocInForeground() }
-    private val option = LocationClientOption()
     private lateinit var locationCallback: LocationCallback
     private var timeoutTimer: Timer? = null
-    private var timeOut = DEF_TIMEOUT
     private val permissions =
         if (needFineLocation) LOCATION_PERMISSIONS else arrayOf(LOCATION_PERMISSIONS[0])
+    var timeOut = DEF_TIMEOUT
 
     @Volatile
     var isLocating = false //正在定位中
         private set
 
     init {
+        val option = LocationClientOption()
         optionConfig.invoke(option)
         option.isOpenGps = option.locationMode != LocationClientOption.LocationMode.Battery_Saving
         client.locOption = option
@@ -99,7 +98,8 @@ class LocationHelper(
     @Synchronized
     fun startLocating(callback: LocationCallback) {
         if (cacheExpiryTime > 0) lastLocation?.run {
-            if (System.currentTimeMillis() - first < cacheExpiryTime) {//上次定位结果还没有过期，使用该结果，不执行定位
+            if (System.currentTimeMillis() - first < cacheExpiryTime && isNeedAutoStop()) {//上次定位结果还没有过期，使用该结果，不执行定位
+                LogUtils.i("--->使用上次定位结果")
                 callback.onFinish(second)
                 return
             }
@@ -138,10 +138,10 @@ class LocationHelper(
      * @param callback LocationCallback
      */
     private fun checkPermissionAndLocating(callback: LocationCallback) {
-        if (callback.requestPermissionReason == null) doLocating(callback)
+        if (callback.locatingPurpose == null) doLocating(callback)
         else {
             Global.doWithPermission(object : BaseActivity.RequestPermissionsCallBack(
-                Pair(callback.requestPermissionReason, permissions)
+                Pair("拒绝此权限将无法${callback.locatingPurpose}", permissions)
             ) {
                 override fun onGranted() {
                     Global.finishTaskActivity()
@@ -163,6 +163,7 @@ class LocationHelper(
     private fun doLocating(callback: LocationCallback) {
         locationCallback = callback
         client.start()
+        if (needForegroundService) client.enableLocInForeground()
         locationCallback.onStart()
         isLocating = true
 
@@ -191,7 +192,7 @@ class LocationHelper(
     }
 
     private fun isNeedAutoStop(): Boolean {
-        return option.scanSpan < 1000
+        return client.locOption.scanSpan < 1000
     }
 
     private fun LocationClient.enableLocInForeground() {
@@ -221,7 +222,7 @@ class LocationHelper(
      * @Note
      */
     interface LocationCallback {
-        val requestPermissionReason: String?//申请定位权限的理由，若为null，则不申请权限，有权限就定位，无权限直接返回定位失败
+        val locatingPurpose: String?//执行定位的目的（例如“获取周边店铺信息”），若为null，则不申请权限，有权限就定位，无权限直接返回定位失败
         var needGps: Boolean//是否需要开启GPS，若为false，则不要求用户开启GPS，已开启就定位，未开启直接返回定位失败
         fun onFinish(bdLocation: BDLocation?)
         fun onStart() {}
