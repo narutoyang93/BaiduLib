@@ -12,6 +12,7 @@ import com.baidu.location.LocationClient
 import com.baidu.location.LocationClientOption
 import com.naruto.lib.common.Global
 import com.naruto.lib.common.base.BaseActivity
+import com.naruto.lib.common.helper.PermissionHelper
 import com.naruto.lib.common.utils.DialogFactory
 import com.naruto.lib.common.utils.LogUtils
 import com.naruto.lib.common.utils.NotificationUtil
@@ -43,12 +44,26 @@ private val LOCATION_PERMISSIONS =
     arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
 
 class LocationHelper(
-    private val context: Context,
+    /**
+     * 可以使用NormalActivityPermissionHelper或LegacyActivityPermissionHelper
+     */
+    private val permissionHelper: PermissionHelper,
     optionConfig: LocationClientOption.() -> Unit = {},
     private val cacheExpiryTime: Long = LAST_LOCATION_EXPIRY_TIME,//缓存结果有效时间（在此期间不再执行定位，而是拿缓存数据返回），若<=0则不缓存，单位：毫秒
     needFineLocation: Boolean = true,//是否需要确切位置
     private val needForegroundService: Boolean = false//是否需要前台服务（无需外部创建服务）
 ) {
+    constructor(
+        activity: BaseActivity,
+        optionConfig: LocationClientOption.() -> Unit = {},
+        cacheExpiryTime: Long = LAST_LOCATION_EXPIRY_TIME,//缓存结果有效时间（在此期间不再执行定位，而是拿缓存数据返回），若<=0则不缓存，单位：毫秒
+        needFineLocation: Boolean = true,//是否需要确切位置
+        needForegroundService: Boolean = false//是否需要前台服务（无需外部创建服务）
+    ) : this(
+        activity.permissionHelper,
+        optionConfig, cacheExpiryTime, needFineLocation, needForegroundService
+    )
+
     companion object {
         //全局记录定位结果，cacheExpiryTime内不再执行定位，除非执行了clearLastLocation()
         var lastLocation: Pair<Long, BDLocation>? = null
@@ -59,7 +74,7 @@ class LocationHelper(
         }
     }
 
-    private val client = LocationClient(context)
+    private val client = LocationClient(permissionHelper.context)
     private lateinit var locationCallback: LocationCallback
     private var timeoutTimer: Timer? = null
     private val permissions =
@@ -87,7 +102,6 @@ class LocationHelper(
                 super.onLocDiagnosticMessage(p0, p1, p2)
                 if (isNeedAutoStop()) stopLocating()
                 LogUtils.e("--->locType=$p0;diagnosticType=$p1;diagnosticMessage=$p2")
-                locationCallback.onFinish(null)
             }
         })
     }
@@ -112,16 +126,15 @@ class LocationHelper(
 
         if (!isGpsOpen()) {
             if (callback.needGps) { //GPS没有打开，提示用户打开GPS重新定位
-                Global.doByActivity { activity ->
-                    DialogFactory.makeGoSettingDialog(activity, "定位服务未开启",
-                        Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS),
-                        { Global.finishTaskActivity(); callback.onFinish(null) } //用户不前往设置，即用户不想定位
-                    ) {
-                        Global.finishTaskActivity()
-                        if (isGpsOpen()) checkPermissionAndLocating(callback)
-                        else callback.onFinish(null)//用户依旧没开启GPS，即用户不想定位
-                    }.show()
-                }
+                DialogFactory.makeGoSettingDialog(permissionHelper, "定位服务未开启",
+                    "请开启定位服务以" + callback.locatingPurpose,
+                    Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS),
+                    { Global.finishTaskActivity(); callback.onFinish(null) } //用户不前往设置，即用户不想定位
+                ) {
+                    Global.finishTaskActivity()
+                    if (isGpsOpen()) checkPermissionAndLocating(callback)
+                    else callback.onFinish(null)//用户依旧没开启GPS，即用户不想定位
+                }.show()
             } else {
                 LogUtils.w("--->GPS is not opened.")
                 callback.onFinish(null)
@@ -140,7 +153,7 @@ class LocationHelper(
     private fun checkPermissionAndLocating(callback: LocationCallback) {
         if (callback.locatingPurpose == null) doLocating(callback)
         else {
-            Global.doWithPermission(object : BaseActivity.RequestPermissionsCallBack(
+            permissionHelper.doWithPermission(object : PermissionHelper.RequestPermissionsCallback(
                 Pair("拒绝此权限将无法${callback.locatingPurpose}", permissions)
             ) {
                 override fun onGranted() {
@@ -196,7 +209,8 @@ class LocationHelper(
     }
 
     private fun LocationClient.enableLocInForeground() {
-        val notification = NotificationUtil.createNotificationBuilder(context).build()
+        val notification =
+            NotificationUtil.createNotificationBuilder(permissionHelper.context).build()
         enableLocInForeground(this@LocationHelper.hashCode(), notification)
     }
 
@@ -210,7 +224,8 @@ class LocationHelper(
      * @return
      */
     private fun isGpsOpen(): Boolean {
-        val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val lm =
+            permissionHelper.context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         return lm.isProviderEnabled(LocationManager.GPS_PROVIDER)
     }
 

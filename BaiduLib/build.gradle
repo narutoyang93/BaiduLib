@@ -58,14 +58,17 @@ afterEvaluate {
 dependencies {
 
     implementation 'androidx.core:core-ktx:1.8.0'
-    implementation 'androidx.appcompat:appcompat:1.4.0'
-    implementation 'com.google.android.material:material:1.4.0'
+    implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'com.google.android.material:material:1.5.0'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
     //公共库
-    implementation 'com.github.narutoyang93:CommonLib:1.0.2-alpha06'
+    implementation 'com.github.narutoyang93:CommonLib:1.0.2-alpha10'
+/*    implementation files('../../CommonLib/CommonLib/build/outputs/aar/CommonLib-release.aar')
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1'*/
+
     //百度sdk
     api 'com.baidu.lbsyun:BaiduMapSDK_Location_All:9.3.5'
     api 'com.baidu.lbsyun:BaiduMapSDK_Search:7.5.3'
