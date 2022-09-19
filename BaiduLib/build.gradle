@@ -40,6 +40,7 @@ android {
     publishing {
         singleVariant("release")
     }
+    namespace 'com.naruto.lib.baidu'
 }
 
 afterEvaluate {
