@@ -1,15 +1,14 @@
 package com.naruto.lib.baidu
 
 import android.app.Activity
-import android.view.View
-import android.widget.TextView
 import com.baidu.mapapi.search.core.SearchResult.ERRORNO
 import com.baidu.mapapi.search.geocode.GeoCodeResult
 import com.baidu.mapapi.search.geocode.OnGetGeoCoderResultListener
 import com.baidu.mapapi.search.geocode.ReverseGeoCodeResult
 import com.baidu.mapapi.utils.OpenClientUtil
+import com.naruto.lib.common.NormalText
 import com.naruto.lib.common.utils.DialogFactory
-import com.naruto.lib.common.utils.DialogFactory.DialogData
+import com.naruto.lib.common.utils.DialogFactory.ActionDialogOption
 
 /**
  * @Description
@@ -26,22 +25,13 @@ object BaiduMapUtil {
     fun checkBaiduMapClient(activity: Activity, runnable: Runnable): Boolean {
         return (OpenClientUtil.getBaiduMapVersion(activity) < 810).also {
             if (it) { //创建弹窗提示未安装百度地图app或app版本过低
-                val dialogData = DialogData()
-                dialogData.layoutResId = com.naruto.lib.common.R.layout.dialog_simple_3_button
-                dialogData.content = "您尚未安装百度地图app或app版本过低，是否前往安装？"
-                dialogData.confirmListener = View.OnClickListener {
-                    OpenClientUtil.getLatestBaiduMapApp(activity)
-                }
-                val dialog = DialogFactory.makeSimpleDialog(activity, dialogData)
-                { d, v ->
-                    val otherBtn = v.findViewById<TextView>(com.naruto.lib.common.R.id.btn_other)
-                    otherBtn.text = "使用网页版"
-                    otherBtn.setOnClickListener {
-                        d.dismiss()
-                        runnable.run()
-                    }
-                }
-                dialog.show()
+                val dialogOption = ActionDialogOption(
+                    content = NormalText("您尚未安装百度地图app或app版本过低，是否前往安装？"),
+                    confirmListener = { _, _ -> OpenClientUtil.getLatestBaiduMapApp(activity) },
+                    neutralText = NormalText("使用网页版"),
+                    neutralListener = { _, _ -> runnable.run() }
+                )
+                DialogFactory.createActionDialog(activity, dialogOption).show()
             } else runnable.run()
         }
     }

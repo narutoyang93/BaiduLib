@@ -11,6 +11,7 @@ import com.baidu.location.BDLocation
 import com.baidu.location.LocationClient
 import com.baidu.location.LocationClientOption
 import com.naruto.lib.common.Global
+import com.naruto.lib.common.NormalText
 import com.naruto.lib.common.base.BaseActivity
 import com.naruto.lib.common.helper.PermissionHelper
 import com.naruto.lib.common.utils.DialogFactory
@@ -126,8 +127,8 @@ class LocationHelper(
 
         if (!isGpsOpen()) {
             if (callback.needGps) { //GPS没有打开，提示用户打开GPS重新定位
-                DialogFactory.makeGoSettingDialog(permissionHelper, "定位服务未开启",
-                    "请开启定位服务以" + callback.locatingPurpose,
+                DialogFactory.createGoSettingDialog(permissionHelper, NormalText("定位服务未开启"),
+                    NormalText("请开启定位服务以" + callback.locatingPurpose),
                     Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS),
                     { Global.finishTaskActivity(); callback.onFinish(null) } //用户不前往设置，即用户不想定位
                 ) {

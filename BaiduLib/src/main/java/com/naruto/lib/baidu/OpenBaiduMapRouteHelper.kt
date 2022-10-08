@@ -11,9 +11,11 @@ import com.baidu.mapapi.utils.OpenClientUtil
 import com.baidu.mapapi.utils.route.BaiduMapRoutePlan
 import com.baidu.mapapi.utils.route.RouteParaOption
 import com.naruto.lib.common.MultiTaskFinishListener
+import com.naruto.lib.common.NormalText
+import com.naruto.lib.common.ResText
 import com.naruto.lib.common.base.BaseActivity
-import com.naruto.lib.common.utils.LifecycleUtil
 import com.naruto.lib.common.utils.DialogFactory
+import com.naruto.lib.common.utils.LifecycleUtil
 import com.naruto.lib.common.utils.LogUtils
 
 /**
@@ -30,7 +32,7 @@ class OpenBaiduMapRouteHelper(private val activity: BaseActivity) {
 
         override fun onFinish(bdLocation: BDLocation?) {
             if (bdLocation == null) {
-                DialogFactory.showHintDialog(activity, "定位失败，无法开启导航")
+                DialogFactory.showHintDialog(activity, NormalText("定位失败，无法开启导航"))
             } else {
                 currentPosition = LatLng(bdLocation.latitude, bdLocation.longitude)
             }
@@ -57,7 +59,8 @@ class OpenBaiduMapRouteHelper(private val activity: BaseActivity) {
     private val geoCoder: GeoCoder by lazy {
         GeoCoder.newInstance().apply {
             setOnGetGeoCodeResultListener(BaiduMapUtil.createOnGetGeoCoderResultListener { data: GeoCodeResult?, throwable: Throwable? ->
-                if (throwable != null) DialogFactory.showHintDialog(activity, throwable.message)
+                if (throwable != null)
+                    DialogFactory.showHintDialog(activity, NormalText(throwable.message!!))
                 else {
                     destination = data!!.location
                     latLngMap[data.address] = destination!!
@@ -90,7 +93,8 @@ class OpenBaiduMapRouteHelper(private val activity: BaseActivity) {
         BaiduMapUtil.checkBaiduMapClient(activity) {
             if (isOnGoing) return@checkBaiduMapClient
             if (TextUtils.isEmpty(address)) {
-                DialogFactory.showHintDialog(activity, null, R.string.address_error_navigate).show()
+                DialogFactory
+                    .showHintDialog(activity, ResText(R.string.address_error_navigate)).show()
                 return@checkBaiduMapClient
             }
             isOnGoing = true
@@ -109,7 +113,8 @@ class OpenBaiduMapRouteHelper(private val activity: BaseActivity) {
         BaiduMapUtil.checkBaiduMapClient(activity) {
             if (isOnGoing) return@checkBaiduMapClient
             if (destination == null) {
-                DialogFactory.showHintDialog(activity, null, R.string.address_error_navigate).show()
+                DialogFactory
+                    .showHintDialog(activity, ResText(R.string.address_error_navigate)).show()
                 return@checkBaiduMapClient
             }
             isOnGoing = true
@@ -157,9 +162,11 @@ class OpenBaiduMapRouteHelper(private val activity: BaseActivity) {
         runCatching(routeFunc).onFailure { e ->
             e.printStackTrace()
             //提示未安装百度地图app或app版本过低
-            DialogFactory.makeSimpleDialog(
-                activity, content = "您尚未安装百度地图app或app版本过低，点击确认安装？",
-                confirmListener = { OpenClientUtil.getLatestBaiduMapApp(activity) }
+            DialogFactory.createActionDialog(
+                activity, DialogFactory.ActionDialogOption(
+                    content = NormalText("您尚未安装百度地图app或app版本过低，点击确认安装？"),
+                    confirmListener = { _, _ -> OpenClientUtil.getLatestBaiduMapApp(activity) }
+                )
             ).show()
         }
 

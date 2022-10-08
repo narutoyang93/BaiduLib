@@ -66,8 +66,8 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
     //公共库
-    implementation 'com.github.narutoyang93:CommonLib:1.0.2-alpha10'
-/*    implementation files('../../CommonLib/CommonLib/build/outputs/aar/CommonLib-release.aar')
+    implementation 'com.github.narutoyang93:CommonLib:1.0.3-alpha01'
+/*    compileOnly files('../../CommonLib/CommonLib/build/outputs/aar/CommonLib-release.aar')
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1'*/
 
     //百度sdk
