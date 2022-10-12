@@ -93,16 +93,27 @@ class LocationHelper(
         client.locOption = option
 
         client.registerLocationListener(object : BDAbstractLocationListener() {
+            @Volatile//是否已经回调（防止重复回调，因为有时候会只执行onLocDiagnosticMessage，有时候会同时执行onLocDiagnosticMessage和onReceiveLocation）
+            private var hasBeenCalledBack = false
+
             override fun onReceiveLocation(result: BDLocation) {
                 if (isNeedAutoStop()) stopLocating()
                 if (cacheExpiryTime > 0) lastLocation = Pair(System.currentTimeMillis(), result)
-                locationCallback.onFinish(result)
+                callback(result)
             }
 
             override fun onLocDiagnosticMessage(p0: Int, p1: Int, p2: String?) {
                 super.onLocDiagnosticMessage(p0, p1, p2)
                 if (isNeedAutoStop()) stopLocating()
                 LogUtils.e("--->locType=$p0;diagnosticType=$p1;diagnosticMessage=$p2")
+                callback(null)
+            }
+
+            private fun callback(result: BDLocation?) {
+                if (hasBeenCalledBack) return
+                hasBeenCalledBack = true
+                Timer().schedule(1000) { hasBeenCalledBack = false }//1s内防止重复回调
+                locationCallback.onFinish(result)
             }
         })
     }
