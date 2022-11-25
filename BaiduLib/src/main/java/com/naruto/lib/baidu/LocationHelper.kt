@@ -138,15 +138,16 @@ class LocationHelper(
 
         if (!isGpsOpen()) {
             if (callback.needGps) { //GPS没有打开，提示用户打开GPS重新定位
-                DialogFactory.createGoSettingDialog(permissionHelper, NormalText("定位服务未开启"),
-                    NormalText("请开启定位服务以" + callback.locatingPurpose),
-                    Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS),
-                    { Global.finishTaskActivity(); callback.onFinish(null) } //用户不前往设置，即用户不想定位
-                ) {
-                    Global.finishTaskActivity()
-                    if (isGpsOpen()) checkPermissionAndLocating(callback)
-                    else callback.onFinish(null)//用户依旧没开启GPS，即用户不想定位
-                }.show()
+                Global.runOnMainThread {
+                    DialogFactory.createGoSettingDialog(permissionHelper, NormalText("定位服务未开启"),
+                        NormalText("请开启定位服务以" + callback.locatingPurpose),
+                        Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS),
+                        { callback.onFinish(null) } //用户不前往设置，即用户不想定位
+                    ) {
+                        if (isGpsOpen()) checkPermissionAndLocating(callback)
+                        else callback.onFinish(null)//用户依旧没开启GPS，即用户不想定位
+                    }.show()
+                }
             } else {
                 LogUtils.w("--->GPS is not opened.")
                 callback.onFinish(null)
@@ -169,12 +170,10 @@ class LocationHelper(
                 Pair("拒绝此权限将无法${callback.locatingPurpose}", permissions)
             ) {
                 override fun onGranted() {
-                    Global.finishTaskActivity()
                     doLocating(callback)
                 }
 
                 override fun onDenied(context: Context?, deniedPermissions: MutableList<String>) {
-                    Global.finishTaskActivity()
                     if (!callback.onPermissionDenied()) super.onDenied(context, deniedPermissions)
                 }
             })
