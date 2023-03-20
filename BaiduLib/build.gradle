@@ -71,8 +71,8 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1'*/
 
     //百度sdk
-    api 'com.baidu.lbsyun:BaiduMapSDK_Location_All:9.3.5'
-    api 'com.baidu.lbsyun:BaiduMapSDK_Search:7.5.3'
-    api 'com.baidu.lbsyun:BaiduMapSDK_Util:7.5.3'
+    api 'com.baidu.lbsyun:BaiduMapSDK_Location_All:9.3.7'
+    api 'com.baidu.lbsyun:BaiduMapSDK_Search:7.5.4'
+    api 'com.baidu.lbsyun:BaiduMapSDK_Util:7.5.4'
     //api 'com.baidu.lbsyun:BaiduMapSDK_Map:7.5.2'
 }
