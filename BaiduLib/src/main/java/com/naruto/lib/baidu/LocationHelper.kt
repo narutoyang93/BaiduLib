@@ -31,7 +31,6 @@ import kotlin.concurrent.schedule
 option.locationMode = LocationClientOption.LocationMode.Battery_Saving; //可选，设置定位模式，默认高精度。LocationMode.Hight_Accuracy：高精度；LocationMode. Battery_Saving：低功耗；LocationMode. Device_Sensors：仅使用设备。
 option.coorType="bd09ll"//可选，设置返回经纬度坐标类型，默认GCJ02。//GCJ02：国测局坐标；BD09ll：百度经纬度坐标；BD09：百度墨卡托坐标。海外地区定位，无需设置坐标类型，统一返回WGS84类型坐标
 option.scanSpan=1000 //可选，设置发起定位请求的间隔，int类型，单位ms，默认为0。如果设置为0，则代表单次定位，即仅定位一次；如果设置非0，需设置1000ms以上才有效
-option.isOpenGps = true//可选，设置是否使用gps，默认false。使用高精度和仅用设备两种定位模式的，参数必须设置为true
 option.isLocationNotify = true //可选，设置是否当GPS有效时按照1S/1次频率输出GPS结果，默认false
 option.isIgnoreKillProcess=false //可选，定位SDK内部是一个service，并放到了独立进程。设置是否在stop的时候杀死这个进程，默认（建议）不杀死，即setIgnoreKillProcess(true)
 option.isIgnoreCacheException=true//可选，设置是否收集Crash信息，默认收集，即参数为false
@@ -88,7 +87,6 @@ class LocationHelper(
     init {
         val option = LocationClientOption()
         optionConfig.invoke(option)
-        option.isOpenGps = option.locationMode != LocationClientOption.LocationMode.Battery_Saving
         client.locOption = option
 
         client.registerLocationListener(object : BDAbstractLocationListener() {
