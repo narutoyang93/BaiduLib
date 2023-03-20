@@ -11,7 +11,6 @@ import com.baidu.location.BDLocation
 import com.baidu.location.LocationClient
 import com.baidu.location.LocationClientOption
 import com.naruto.lib.common.Global
-import com.naruto.lib.common.NormalText
 import com.naruto.lib.common.base.BaseActivity
 import com.naruto.lib.common.helper.PermissionHelper
 import com.naruto.lib.common.utils.DialogFactory
@@ -46,13 +45,13 @@ private val LOCATION_PERMISSIONS =
 
 class LocationHelper(
     /**
-     * 可以使用NormalActivityPermissionHelper或LegacyActivityPermissionHelper
+     * 可以使用NormalActivityPermissionHelper或LegacyActivityPermissionHelper，也可以直接用PermissionHelper.getDefault(activity)
      */
     private val permissionHelper: PermissionHelper,
     optionConfig: LocationClientOption.() -> Unit = {},
     private val cacheExpiryTime: Long = LAST_LOCATION_EXPIRY_TIME,//缓存结果有效时间（在此期间不再执行定位，而是拿缓存数据返回），若<=0则不缓存，单位：毫秒
     needFineLocation: Boolean = true,//是否需要确切位置
-    private val needForegroundService: Boolean = false//是否需要前台服务（无需外部创建服务）
+    private val needForegroundService: Boolean = false,//是否需要前台服务（无需外部创建服务）
 ) {
     constructor(
         activity: BaseActivity,
@@ -139,8 +138,8 @@ class LocationHelper(
         if (!isGpsOpen()) {
             if (callback.needGps) { //GPS没有打开，提示用户打开GPS重新定位
                 Global.runOnMainThread {
-                    DialogFactory.createGoSettingDialog(permissionHelper, NormalText("定位服务未开启"),
-                        NormalText("请开启定位服务以" + callback.locatingPurpose),
+                    DialogFactory.createGoSettingDialog(permissionHelper, "定位服务未开启",
+                        "请开启定位服务以" + callback.locatingPurpose,
                         Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS),
                         { callback.onFinish(null) } //用户不前往设置，即用户不想定位
                     ) {

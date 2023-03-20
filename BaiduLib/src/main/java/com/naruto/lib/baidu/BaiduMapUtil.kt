@@ -6,7 +6,6 @@ import com.baidu.mapapi.search.geocode.GeoCodeResult
 import com.baidu.mapapi.search.geocode.OnGetGeoCoderResultListener
 import com.baidu.mapapi.search.geocode.ReverseGeoCodeResult
 import com.baidu.mapapi.utils.OpenClientUtil
-import com.naruto.lib.common.NormalText
 import com.naruto.lib.common.utils.DialogFactory
 import com.naruto.lib.common.utils.DialogFactory.ActionDialogOption
 
@@ -26,9 +25,9 @@ object BaiduMapUtil {
         return (OpenClientUtil.getBaiduMapVersion(activity) < 810).also {
             if (it) { //创建弹窗提示未安装百度地图app或app版本过低
                 val dialogOption = ActionDialogOption(
-                    content = NormalText("您尚未安装百度地图app或app版本过低，是否前往安装？"),
+                    content = "您尚未安装百度地图app或app版本过低，是否前往安装？",
                     confirmListener = { _, _ -> OpenClientUtil.getLatestBaiduMapApp(activity) },
-                    neutralText = NormalText("使用网页版"),
+                    neutralText = "使用网页版",
                     neutralListener = { _, _ -> runnable.run() }
                 )
                 DialogFactory.createActionDialog(activity, dialogOption).show()
