@@ -74,7 +74,7 @@ class LocationHelper(
         }
     }
 
-    private val client = LocationClient(permissionHelper.context)
+    private val client = LocationClient(Global.getMainModuleContext())
     private lateinit var locationCallback: LocationCallback
     private var timeoutTimer: Timer? = null
     private val permissions =
