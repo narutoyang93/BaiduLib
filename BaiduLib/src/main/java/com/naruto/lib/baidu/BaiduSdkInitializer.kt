@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.util.Log
 import com.baidu.location.LocationClient
 import com.baidu.mapapi.SDKInitializer
 import com.baidu.mapapi.VersionInfo
@@ -71,12 +70,10 @@ class BaiduSdkInitializer {
     private class Checker : BaiduInitializerListener {
         private val weatherSearch = WeatherSearch.newInstance().apply {
             setWeatherSearchResultListener { result ->
-                when (result.error) {
-                    SearchResult.ERRORNO.PERMISSION_UNFINISHED -> Timer().schedule(300) { start() }
-                    SearchResult.ERRORNO.NETWORK_ERROR, SearchResult.ERRORNO.NETWORK_TIME_OUT ->
-                        onFinish(null)
-                    else -> onFinish(result.error != SearchResult.ERRORNO.KEY_ERROR)
-                }
+                if (result.error == SearchResult.ERRORNO.PERMISSION_UNFINISHED)
+                    Timer().schedule(300) { start() }
+                else (result.error == SearchResult.ERRORNO.NO_ERROR)
+                        .let { onFinish(it);if (!it) LogUtils.e("--->error:${result.error}") }
             }
         }
 
@@ -84,7 +81,6 @@ class BaiduSdkInitializer {
             .apply { weatherDataType(WeatherDataType.WEATHER_DATA_TYPE_ALL).districtID("110105") }// 天安门区域ID
 
         override fun start() {
-            Log.i("naruto", "--->startCheck")
             weatherSearch.request(option)
         }
     }
@@ -92,9 +88,9 @@ class BaiduSdkInitializer {
 
     private interface BaiduInitializerListener {
         fun start()
-        fun onFinish(isValid: Boolean?) {
+        fun onFinish(isValid: Boolean) {
             isBaiduKeyValid = isValid
-            while (taskQueue.isNotEmpty()) taskQueue.removeAt(0).invoke(isBaiduKeyValid ?: false)
+            while (taskQueue.isNotEmpty()) taskQueue.removeAt(0).invoke(isBaiduKeyValid!!)
         }
     }
 }
