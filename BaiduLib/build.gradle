@@ -66,9 +66,10 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
     //公共库
-    releaseImplementation 'com.github.narutoyang93:CommonLib:1.0.5-alpha02'
+    implementation 'com.github.narutoyang93:CommonLib:1.0.5-alpha02'
+/*    releaseImplementation 'com.github.narutoyang93:CommonLib:1.0.5-alpha02'
     debugCompileOnly files('../../CommonLib/CommonLib/build/outputs/aar/CommonLib-debug.aar')
-    debugImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
+    debugImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'*/
 
     //百度sdk
     api 'com.baidu.lbsyun:BaiduMapSDK_Location_All:9.3.7'
