@@ -16,9 +16,10 @@ import com.naruto.lib.common.helper.PermissionHelper
 import com.naruto.lib.common.utils.DialogFactory
 import com.naruto.lib.common.utils.LogUtils
 import com.naruto.lib.common.utils.NotificationUtil
+import com.naruto.lib.common.utils.showWithoutActivity
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.Timer
 import kotlin.concurrent.schedule
 
 /**
@@ -135,15 +136,15 @@ class LocationHelper(
 
         if (!isGpsOpen()) {
             if (callback.needGps) { //GPS没有打开，提示用户打开GPS重新定位
-                Global.runOnMainThread {
+                MainScope().launch {
                     DialogFactory.createGoSettingDialog(permissionHelper, "定位服务未开启",
                         "请开启定位服务以" + callback.locatingPurpose,
                         Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS),
-                        { callback.onFinish(null) } //用户不前往设置，即用户不想定位
+                        { callback.onUserDoNotOpenGps() } //用户不前往设置
                     ) {
                         if (isGpsOpen()) checkPermissionAndLocating(callback)
-                        else callback.onFinish(null)//用户依旧没开启GPS，即用户不想定位
-                    }.show()
+                        else callback.onUserDoNotOpenGps()//用户依旧没开启GPS
+                    }.showWithoutActivity()
                 }
             } else {
                 LogUtils.w("--->GPS is not opened.")
@@ -256,6 +257,10 @@ class LocationHelper(
          */
         fun onPermissionDenied(): Boolean {
             return false
+        }
+
+        fun onUserDoNotOpenGps(){
+            onFinish(null)
         }
     }
 }
