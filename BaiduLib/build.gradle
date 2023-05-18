@@ -58,16 +58,16 @@ afterEvaluate {
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.8.0'
-    implementation 'androidx.appcompat:appcompat:1.4.1'
-    implementation 'com.google.android.material:material:1.5.0'
+    compileOnly 'androidx.core:core-ktx:1.8.0'
+    compileOnly 'androidx.appcompat:appcompat:1.6.0-alpha01'
+    compileOnly 'com.google.android.material:material:1.7.0-alpha02'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
     //公共库
-    implementation 'com.github.narutoyang93:CommonLib:1.0.5-alpha02'
-/*    releaseImplementation 'com.github.narutoyang93:CommonLib:1.0.5-alpha02'
+    implementation 'com.github.narutoyang93:CommonLib:1.0.5-alpha04'
+/*    releaseImplementation 'com.github.narutoyang93:CommonLib:1.0.5-alpha04'
     debugCompileOnly files('../../CommonLib/CommonLib/build/outputs/aar/CommonLib-debug.aar')
     debugImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'*/
 
