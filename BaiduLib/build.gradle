@@ -66,9 +66,9 @@ dependencies {
     androidTestCompileOnly 'androidx.test.espresso:espresso-core:3.5.1'
 
     //公共库
-//    implementation 'com.github.narutoyang93:CommonLib:1.0.5-alpha04'
-    releaseCompileOnly 'com.github.narutoyang93:CommonLib:1.0.6-alpha01'
-    debugCompileOnly files('../../CommonLib/CommonLib/build/outputs/aar/CommonLib-debug.aar')
+//    releaseCompileOnly 'com.github.narutoyang93:CommonLib:1.0.6-alpha01'
+    compileOnly 'com.github.narutoyang93:CommonLib:1.0.6-alpha01'
+//    debugCompileOnly files('../../CommonLib/CommonLib/build/outputs/aar/CommonLib-debug.aar')
 //    debugCompileOnly 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
 
     //百度sdk
