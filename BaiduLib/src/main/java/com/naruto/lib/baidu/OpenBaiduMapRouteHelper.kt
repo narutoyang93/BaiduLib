@@ -1,21 +1,23 @@
 package com.naruto.lib.baidu
 
 import android.text.TextUtils
-import com.baidu.location.BDLocation
+import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup
+import android.widget.PopupWindow
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import com.baidu.mapapi.model.LatLng
 import com.baidu.mapapi.search.geocode.GeoCodeOption
 import com.baidu.mapapi.search.geocode.GeoCodeResult
 import com.baidu.mapapi.search.geocode.GeoCoder
-import com.baidu.mapapi.utils.DistanceUtil
-import com.baidu.mapapi.utils.OpenClientUtil
 import com.baidu.mapapi.utils.route.BaiduMapRoutePlan
 import com.baidu.mapapi.utils.route.RouteParaOption
-import com.naruto.lib.common.MultiTaskFinishListener
 import com.naruto.lib.common.TopFunction.getResString
-import com.naruto.lib.common.base.BaseActivity
+import com.naruto.lib.common.list.OnItemClickListener
 import com.naruto.lib.common.utils.DialogFactory
 import com.naruto.lib.common.utils.LifecycleUtil
-import com.naruto.lib.common.utils.LogUtils
+import com.naruto.lib.common.utils.PopupWindowFactory
 
 /**
  * @Description
@@ -23,56 +25,34 @@ import com.naruto.lib.common.utils.LogUtils
  * @CreateDate 2022/7/27 0027
  * @Note
  */
-class OpenBaiduMapRouteHelper(private val activity: BaseActivity) {
-    private val locationHelper = LocationHelper(activity)
-    private val locationCallback = object : LocationHelper.LocationCallback {
-        override val locatingPurpose: String = "使用导航功能"
-        override var needGps: Boolean = true
+private const val TAG = "OpenBaiduMapRouteHelper"
 
-        override fun onFinish(bdLocation: BDLocation?) {
-            if (bdLocation == null) {
-                DialogFactory.showHintDialog(activity, "定位失败，无法开启导航")
-            } else {
-                currentPosition = LatLng(bdLocation.latitude, bdLocation.longitude)
-            }
-            mTaskFinishListener.finish("locating")
-        }
-
-        override fun onStart() {
-            activity.showLoadingDialog()
-        }
-
-        override fun onPermissionDenied(): Boolean {
-            mTaskFinishListener.finish("locating")
-            return super.onPermissionDenied()
-        }
-    }
-
-    private val mTaskFinishListener = object : MultiTaskFinishListener() {
-        override fun onAllTasksFinished() {
-            activity.dismissLoadingDialog()
-            openBaiduMapRoute()
-        }
-    }
-
+class OpenMapRouteHelper(
+    private val activity: AppCompatActivity,
+    private val loadingDialog: AlertDialog
+    = DialogFactory.createLoadingDialog(activity).also { it.setCancelable(false) }
+) {
+    private val rootView = activity.window.decorView.findViewById(android.R.id.content) as ViewGroup
     private val geoCoder: GeoCoder by lazy {
         GeoCoder.newInstance().apply {
             setOnGetGeoCodeResultListener(BaiduMapUtil.createOnGetGeoCoderResultListener { data: GeoCodeResult?, throwable: Throwable? ->
+                loadingDialog.dismiss()
                 if (throwable != null)
                     DialogFactory.showHintDialog(activity, throwable.message!!)
                 else {
                     destination = data!!.location
                     latLngMap[data.address] = destination!!
+                    showSelectTransportTypeDialog()
                 }
             })
         }
-
     }
 
-    private val destroyCallback =
-        LifecycleUtil.addDestroyObserver(activity.lifecycleOwner, this) { destroy() }
+    private val transportTypePopupWindow by lazy { createSelectTransportPopupWindow() }
 
-    private var currentPosition: LatLng? = null//当前位置经纬度
+    private val destroyCallback =
+        LifecycleUtil.addDestroyObserver(activity, this) { destroy() }
+
     private var destination //目的地经纬度
             : LatLng? = null
     private var destinationName //目的地名称
@@ -80,7 +60,6 @@ class OpenBaiduMapRouteHelper(private val activity: BaseActivity) {
     private val latLngMap = mutableMapOf<String, LatLng>()
     private var destinationAddress //目的地地址
             : String? = null
-    private var isOnGoing = false
 
 
     /**
@@ -89,17 +68,18 @@ class OpenBaiduMapRouteHelper(private val activity: BaseActivity) {
      * @param address 目的地地址
      */
     fun openBaiduMapRoute(address: String?) {
+        if (TextUtils.isEmpty(address)) {
+            DialogFactory.showHintDialog(activity, getResString(R.string.address_error_navigate))
+            return
+        }
+        loadingDialog.show()
         BaiduMapUtil.checkBaiduMapClient(activity) {
-            if (isOnGoing) return@checkBaiduMapClient
-            if (TextUtils.isEmpty(address)) {
-                DialogFactory
-                    .showHintDialog(activity, getResString(R.string.address_error_navigate)).show()
-                return@checkBaiduMapClient
-            }
-            isOnGoing = true
             destination = latLngMap[address]
             if (destination == null) getLatLngByAddress(address!!)
-            locating()
+            else {
+                loadingDialog.dismiss()
+                showSelectTransportTypeDialog()
+            }
         }
     }
 
@@ -109,67 +89,74 @@ class OpenBaiduMapRouteHelper(private val activity: BaseActivity) {
      * @param destination 目的地经纬度
      */
     fun openBaiduMapRoute(destination: LatLng?) {
+        loadingDialog.show()
         BaiduMapUtil.checkBaiduMapClient(activity) {
-            if (isOnGoing) return@checkBaiduMapClient
+            loadingDialog.dismiss()
             if (destination == null) {
                 DialogFactory
-                    .showHintDialog(activity, getResString(R.string.address_error_navigate)).show()
+                    .showHintDialog(activity, getResString(R.string.address_error_navigate))
                 return@checkBaiduMapClient
             }
-            isOnGoing = true
             this.destination = destination
-            locating()
+            showSelectTransportTypeDialog()
         }
     }
 
     /**
-     * 获取当前位置经纬度
+     * 显示选择交通方式弹窗
      */
-    private fun locating() {
-        currentPosition = null
-        mTaskFinishListener.start("locating")
-        LocationHelper.clearLastLocation()
-        locationHelper.startLocating(locationCallback)
+    private fun showSelectTransportTypeDialog() {
+        transportTypePopupWindow.showAtLocation(rootView, Gravity.BOTTOM, 0, 0)
+    }
+
+    /**
+     * 创建选择交通方式弹窗
+     * @return PopupWindow
+     */
+    private fun createSelectTransportPopupWindow(): PopupWindow {
+        return PopupWindowFactory.createSelectPopupWindow(
+            "选择交通方式", rootView, TransportType.values().asList(), { it.text },
+            object : OnItemClickListener<TransportType> {
+                override fun onClick(data: TransportType, position: Int, view: View) {
+                    openBaiduMapRoute(data)
+                }
+            })
     }
 
     /**
      * 打开百度地图规划路线
      */
-    private fun openBaiduMapRoute() {
-        if (currentPosition == null) {
-            isOnGoing = false
-            LogUtils.d("---> return")
-            return
-        }
+    private fun openBaiduMapRoute(transportType: TransportType) {
         // 构建 route搜索参数
         val routeParaOption = RouteParaOption()
-            .startPoint(currentPosition).startName("我的位置").endName(destinationName)
-        val distance: Double = if (destination == null) Int.MAX_VALUE.toDouble()//无法获取目的地经纬度
-        else {
-            routeParaOption.endPoint(destination)
-            DistanceUtil.getDistance(currentPosition, destination)
-        }
-        LogUtils.i("---> distance=$distance")
+            .startName("我的位置")
+            .endName(destinationName)
+            .endPoint(destination)
 
         //启动百度地图路线规划
-        val routeFunc: () -> Unit = if (distance > 1000) { //路程太远，使用公共交通
-            routeParaOption.busStrategyType(RouteParaOption.EBusStrategyType.bus_recommend_way);
-            { BaiduMapRoutePlan.openBaiduMapTransitRoute(routeParaOption, activity) }
-        } else { //步行
-            { BaiduMapRoutePlan.openBaiduMapWalkingRoute(routeParaOption, activity) }
-        }
-        runCatching(routeFunc).onFailure { e ->
-            e.printStackTrace()
-            //提示未安装百度地图app或app版本过低
-            DialogFactory.createActionDialog(
-                activity, DialogFactory.ActionDialogOption(
-                    content = "您尚未安装百度地图app或app版本过低，点击确认安装？",
-                    confirmListener = { _, _ -> OpenClientUtil.getLatestBaiduMapApp(activity) }
-                )
-            ).show()
-        }
+        runCatching {
+            when (transportType) {
+                TransportType.Walking ->
+                    BaiduMapRoutePlan.openBaiduMapWalkingRoute(routeParaOption, activity)
 
-        isOnGoing = false
+                TransportType.Transit -> {
+                    routeParaOption.busStrategyType(RouteParaOption.EBusStrategyType.bus_recommend_way)
+                    BaiduMapRoutePlan.openBaiduMapTransitRoute(routeParaOption, activity)
+                }
+
+                TransportType.Driving ->
+                    BaiduMapRoutePlan.openBaiduMapDrivingRoute(routeParaOption, activity)
+
+                TransportType.NewEnergy ->
+                    BaiduMapRoutePlan.openBaiduMapNewEnergyRoute(routeParaOption, activity)
+
+                TransportType.Truck ->
+                    BaiduMapRoutePlan.openBaiduMapTruckRoute(routeParaOption, activity)
+            }
+        }.onFailure { e ->
+            e.printStackTrace()
+            DialogFactory.showHintDialog(activity, e.message ?: "未知异常", "调起导航失败")
+        }
     }
 
     /**
@@ -178,7 +165,6 @@ class OpenBaiduMapRouteHelper(private val activity: BaseActivity) {
      * @param address
      */
     private fun getLatLngByAddress(address: String) {
-        mTaskFinishListener.start("geoCoder")
         destinationAddress = address
         destinationName = destinationAddress
         destinationAddress!!.let { s ->
@@ -195,5 +181,9 @@ class OpenBaiduMapRouteHelper(private val activity: BaseActivity) {
         geoCoder.destroy()
         destroyCallback()
         BaiduMapRoutePlan.finish(activity)
+    }
+
+    private enum class TransportType(val text: String) {
+        Walking("步行"), Transit("公共交通"), Driving("驾车"), NewEnergy("新能源"), Truck("货车")
     }
 }

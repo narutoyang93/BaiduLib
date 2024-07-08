@@ -12,9 +12,8 @@ import com.baidu.mapapi.search.core.SearchResult
 import com.baidu.mapapi.search.weather.WeatherDataType
 import com.baidu.mapapi.search.weather.WeatherSearch
 import com.baidu.mapapi.search.weather.WeatherSearchOption
-import com.naruto.lib.common.commonLibInit
 import com.naruto.lib.common.utils.LogUtils
-import java.util.*
+import java.util.Timer
 import kotlin.concurrent.schedule
 
 /**
@@ -106,7 +105,6 @@ fun Application.baiduLibInit() {
     SDKInitializer.setAgreePrivacy(applicationContext, true)
     SDKInitializer.initialize(applicationContext)
     LocationClient.setAgreePrivacy(true)
-    commonLibInit()
 }
 
 private var hasInitialized = false
