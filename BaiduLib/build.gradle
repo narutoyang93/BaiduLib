@@ -10,10 +10,10 @@ task generateSourcesJar(type: Jar) {
 }
 
 android {
-    compileSdk 32
+    compileSdk 34
 
     defaultConfig {
-        minSdk 22
+        minSdk 24
         targetSdk 32
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -58,18 +58,18 @@ afterEvaluate {
 
 dependencies {
 
-    compileOnly 'androidx.core:core-ktx:1.8.0'
-    compileOnly 'androidx.appcompat:appcompat:1.6.0-alpha01'
-    compileOnly 'com.google.android.material:material:1.7.0-alpha02'
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    compileOnly 'androidx.core:core-ktx:1.12.0'
+    compileOnly 'androidx.appcompat:appcompat:1.6.1'
+    compileOnly 'com.google.android.material:material:1.10.0'
+    testCompileOnly 'junit:junit:4.13.2'
+    androidTestCompileOnly 'androidx.test.ext:junit:1.1.5'
+    androidTestCompileOnly 'androidx.test.espresso:espresso-core:3.5.1'
 
     //公共库
-    implementation 'com.github.narutoyang93:CommonLib:1.0.5-alpha04'
-/*    releaseImplementation 'com.github.narutoyang93:CommonLib:1.0.5-alpha04'
+//    implementation 'com.github.narutoyang93:CommonLib:1.0.5-alpha04'
+    releaseCompileOnly 'com.github.narutoyang93:CommonLib:1.0.6-alpha01'
     debugCompileOnly files('../../CommonLib/CommonLib/build/outputs/aar/CommonLib-debug.aar')
-    debugImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'*/
+//    debugCompileOnly 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
 
     //百度sdk
     api 'com.baidu.lbsyun:BaiduMapSDK_Location_All:9.3.7'
