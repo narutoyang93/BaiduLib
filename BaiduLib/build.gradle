@@ -13,7 +13,7 @@ android {
     compileSdk 34
 
     defaultConfig {
-        minSdk 24
+        minSdk 22
         targetSdk 32
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -66,14 +66,14 @@ dependencies {
     androidTestCompileOnly 'androidx.test.espresso:espresso-core:3.5.1'
 
     //公共库
-//    releaseCompileOnly 'com.github.narutoyang93:CommonLib:1.0.6-alpha01'
-    compileOnly 'com.github.narutoyang93:CommonLib:1.0.6-alpha01'
+//    releaseCompileOnly 'com.github.narutoyang93:CommonLib:1.0.6'
+    compileOnly 'com.github.narutoyang93:CommonLib:1.0.6'
 //    debugCompileOnly files('../../CommonLib/CommonLib/build/outputs/aar/CommonLib-debug.aar')
 //    debugCompileOnly 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
 
     //百度sdk
-    api 'com.baidu.lbsyun:BaiduMapSDK_Location_All:9.3.7'
-    api 'com.baidu.lbsyun:BaiduMapSDK_Search:7.5.4'
-    api 'com.baidu.lbsyun:BaiduMapSDK_Util:7.5.4'
-    //api 'com.baidu.lbsyun:BaiduMapSDK_Map:7.5.2'
+    api 'com.baidu.lbsyun:BaiduMapSDK_Location_All:9.6.4'
+    api 'com.baidu.lbsyun:BaiduMapSDK_Search:7.6.2'
+    api 'com.baidu.lbsyun:BaiduMapSDK_Util:7.6.2'
+    //api 'com.baidu.lbsyun:BaiduMapSDK_Map:7.6.2'
 }
