@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.location.LocationManager
+import android.os.Build
 import android.provider.Settings
 import android.util.Pair
 import com.baidu.location.BDAbstractLocationListener
@@ -164,17 +165,30 @@ class LocationHelper(
     private fun checkPermissionAndLocating(callback: LocationCallback) {
         if (callback.locatingPurpose == null) doLocating(callback)
         else {
-            permissionHelper.doWithPermission(object : PermissionHelper.RequestPermissionsCallback(
-                Pair("拒绝此权限将无法${callback.locatingPurpose}", permissions)
-            ) {
-                override fun onGranted() {
-                    doLocating(callback)
-                }
+            val reason = "拒绝此权限将无法${callback.locatingPurpose}"
+            permissionHelper.doWithPermission(
+                object : PermissionHelper.RequestPermissionsCallback(Pair(reason, permissions)) {
+                    override fun onGranted() {//先申请前台权限，再申请后台权限，因为不能同时申请
+                        if (needForegroundService || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
+                            doLocating(callback)
+                        else permissionHelper.doWithPermission(
+                            object : PermissionHelper.RequestPermissionsCallback(
+                                arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                                    .let { Pair(reason, it) }
+                            ) {
+                                override fun onGranted() {
+                                    doLocating(callback)
+                                }
+                            })
+                    }
 
-                override fun onDenied(context: Context?, deniedPermissions: MutableList<String>) {
-                    if (!callback.onPermissionDenied()) super.onDenied(context, deniedPermissions)
-                }
-            })
+                    override fun onDenied(
+                        context: Context?, deniedPermissions: MutableList<String>
+                    ) {
+                        if (!callback.onPermissionDenied())
+                            super.onDenied(context, deniedPermissions)
+                    }
+                })
         }
     }
 
@@ -259,7 +273,7 @@ class LocationHelper(
             return false
         }
 
-        fun onUserDoNotOpenGps(){
+        fun onUserDoNotOpenGps() {
             onFinish(null)
         }
     }
