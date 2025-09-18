@@ -86,6 +86,9 @@ class LocationHelper(
     var isLocating = false //正在定位中
         private set
 
+    private var isInitialized = false
+    private var firstLocationCallback: LocationCallback? = null
+
     init {
         val option = LocationClientOption()
         optionConfig.invoke(option)
@@ -115,6 +118,17 @@ class LocationHelper(
                 locationCallback.onFinish(result)
             }
         })
+
+        if (option.scanSpan != client.locOption.scanSpan)
+            CoroutineScope(Dispatchers.IO).launch {
+                do {
+                    delay(50)
+                } while (option.scanSpan != client.locOption.scanSpan)
+                isInitialized = true
+                firstLocationCallback?.let { doLocating(it) }
+                firstLocationCallback = null
+            }
+        else isInitialized = true
     }
 
     /**
@@ -197,6 +211,10 @@ class LocationHelper(
      * @param callback LocationCallback
      */
     private fun doLocating(callback: LocationCallback) {
+        if (!isInitialized) {
+            firstLocationCallback = callback
+            return
+        }
         locationCallback = callback
         client.start()
         if (needForegroundService) client.enableLocInForeground()

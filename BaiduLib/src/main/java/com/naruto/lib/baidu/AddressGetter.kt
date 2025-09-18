@@ -15,6 +15,8 @@ import com.baidu.mapapi.search.geocode.ReverseGeoCodeOption
 import com.baidu.mapapi.search.geocode.ReverseGeoCodeResult
 import com.naruto.lib.common.base.BaseActivity
 import com.naruto.lib.common.helper.PermissionHelper
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
 
 /**
@@ -29,10 +31,15 @@ open class AddressGetter(
     permissionHelper: PermissionHelper,
     optionConfig: LocationClientOption.() -> Unit = {}
 ) {
+    constructor(permissionHelper: PermissionHelper) : this(permissionHelper, {})
+
     private val permissionHelperWF = WeakReference(permissionHelper)
     private val locationHelper by lazy {
-        LocationHelper(permissionHelper, optionConfig, 0, true, true)
-            .also { addOnActivityDestroyListener { it.destroy() } }
+        LocationHelper(
+            permissionHelper,
+            { setCoorType("bd09ll");setIsNeedAddress(true);optionConfig() },
+            0, true, true
+        ).also { addOnActivityDestroyListener { it.destroy() } }
     }
 
     private lateinit var geoCoderCallback: (address: ReverseGeoCodeResult.AddressComponent?) -> Unit
@@ -45,10 +52,10 @@ open class AddressGetter(
                 override fun onGetReverseGeoCodeResult(p0: ReverseGeoCodeResult?) {
                     p0?.run {
                         if (error == SearchResult.ERRORNO.NO_ERROR) {
-                            Log.i(TAG, "--->address=$address")
+                            Log.i(TAG, "--->反地理编码 address=$address")
                             geoCoderCallback.invoke(addressDetail)
                         } else {
-                            Log.e(TAG, "--->error=$error")
+                            Log.e(TAG, "--->error=$error;status=$status")
                             geoCoderCallback.invoke(null)
                         }
                     }
@@ -75,6 +82,12 @@ open class AddressGetter(
             override fun onFinish(bdLocation: BDLocation?) {
                 if (bdLocation != null && bdLocation.addrStr == null) {
                     if (bdLocation.locType == 61 || bdLocation.locType == 161) {
+                        (if (bdLocation.locType == 61) "卫星定位" else "网络定位").let {
+                            Log.w(
+                                "AddressGetter",
+                                "--->onFinish: ${it}获取地址失败；latitude=${bdLocation.latitude};longitude=${bdLocation.longitude}"
+                            )
+                        }
                         geoCoderCallback = { addrData ->
                             if (addrData == null) callback.invoke(null)
                             else {
@@ -96,12 +109,21 @@ open class AddressGetter(
         })
     }
 
+    /**
+     *   除非设置了周期定位，否则默认单次定位，单次定位后会自动停止，无需手动调用此方法，周期定位才需要调用
+     */
+    fun stopLocating() {
+        locationHelper.stopLocating()
+    }
+
     private fun addOnActivityDestroyListener(callback: () -> Unit) {
-        getActivity()?.lifecycle?.addObserver(object : DefaultLifecycleObserver {
-            override fun onDestroy(owner: LifecycleOwner) {
-                callback.invoke()
-                super.onDestroy(owner)
-            }
-        })
+        MainScope().launch {
+            getActivity()?.lifecycle?.addObserver(object : DefaultLifecycleObserver {
+                override fun onDestroy(owner: LifecycleOwner) {
+                    callback.invoke()
+                    super.onDestroy(owner)
+                }
+            })
+        }
     }
 }
